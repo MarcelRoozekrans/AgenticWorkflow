@@ -1,0 +1,19 @@
+{
+  // Multi-Agent System
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  // Editor defaults (customize per project)
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  // Exclude generated files from search
+  "files.exclude": {
+    "node_modules/": true,
+    "dist/": true
+  },
+  "search.exclude": {
+    "node_modules": true,
+    "dist": true,
+    ".git": true,
+    ".github/workflows/*.lock.yml": true
+  }
+}

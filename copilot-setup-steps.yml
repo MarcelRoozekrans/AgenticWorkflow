@@ -1,0 +1,43 @@
+# Copilot Coding Agent Setup Steps
+# This file configures the development environment when the Copilot coding agent
+# starts working on an issue. Runs before any code generation begins.
+#
+# Reference: https://docs.github.com/en/copilot/how-tos/agents/copilot-coding-agent/customizing-the-development-environment-for-copilot-coding-agent
+
+setupSteps:
+  - name: Install dependencies
+    run: npm ci
+    
+  - name: Install global tools
+    run: npm install -g @github/copilot-cli
+    
+  - name: Setup environment variables
+    run: |
+      echo "NODE_ENV=development" >> $GITHUB_ENV
+      
+  - name: Verify tooling
+    run: |
+      node --version
+      npm --version
+      git --version
+
+# Post-setup validation steps
+# These run after the agent completes implementation to validate quality
+postSetupSteps:
+  - name: Run linter
+    run: npm run lint
+    
+  - name: Run type checking
+    run: npm run type-check
+    
+  - name: Run tests
+    run: npm run test
+    
+  - name: Check test coverage
+    run: npm run test:coverage
+
+# Custom instructions for the coding agent
+# Reference: https://docs.github.com/en/copilot/how-tos/agents/copilot-coding-agent/best-practices-for-using-copilot-to-work-on-tasks#adding-custom-instructions-to-your-repository
+customInstructions:
+  instructionsFile: ".copilot-instructions"
+  agentConfig: ".github/agents.yml"

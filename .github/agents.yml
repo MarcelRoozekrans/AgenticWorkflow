@@ -1,0 +1,515 @@
+# Agent System Configuration
+# Single source of truth for all agents - used by VS Code AND GitHub workflows
+
+version: "1.0"
+
+# =============================================================================
+# AGENT DEFINITIONS
+# All agents are defined here and referenced by both:
+# - VS Code (via .github/chatmodes/*.chatmode.md files)
+# - GitHub workflows (via this config)
+# =============================================================================
+
+agents:
+  orchestrator:
+    name: "Orchestrator"
+    description: "Coordinate multiple specialized agents for complex work items"
+    prompt-file: ".github/chatmodes/Orchestrator.chatmode.md"
+    icon: "🎯"
+    triggers:
+      - complex features
+      - multi-component changes
+      - unclear scope
+    outputs-to: ["architect", "security", "performance", "planner"]
+    max-retries: 2
+    timeout: 180s
+    
+  architect:
+    name: "Architect"
+    description: "System design, patterns, and API contracts"
+    prompt-file: ".github/chatmodes/Architect.chatmode.md"
+    icon: "🏗️"
+    triggers:
+      keywords: ["api", "component", "service", "schema", "database", "design"]
+      labels: ["feature", "enhancement", "architecture"]
+    outputs:
+      - architecture decisions (ADR)
+      - component design
+      - API contracts
+      - file structure
+    outputs-to: ["planner", "security"]
+    
+  security:
+    name: "Security"
+    description: "Threat modeling and security requirements"
+    prompt-file: ".github/chatmodes/Security.chatmode.md"
+    icon: "🔒"
+    triggers:
+      keywords: ["auth", "login", "password", "token", "permission", "encrypt", "secret", "user"]
+      labels: ["security", "authentication", "authorization"]
+    outputs:
+      - threat model (STRIDE)
+      - security requirements
+      - security test cases
+    outputs-to: ["planner", "testwriter"]
+    priority: "critical"  # Security requirements are non-negotiable
+    max-retries: 3  # Critical agent gets more retries
+    timeout: 300s
+    skip-allowed: false  # Cannot be skipped
+    
+  performance:
+    name: "Performance"
+    description: "Performance analysis and optimization"
+    prompt-file: ".github/chatmodes/Performance.chatmode.md"
+    icon: "⚡"
+    triggers:
+      keywords: ["slow", "optimize", "cache", "scale", "query", "load", "performance"]
+      labels: ["performance", "optimization"]
+    outputs:
+      - performance requirements
+      - optimization strategy
+      - caching recommendations
+      - load test scenarios
+    outputs-to: ["planner", "testwriter"]
+    
+  planner:
+    name: "Planner"
+    description: "Implementation plans and acceptance criteria"
+    prompt-file: ".github/chatmodes/Planning.chatmode.md"
+    icon: "📋"
+    triggers:
+      - all features (runs for every issue)
+    inputs-from: ["architect", "security", "performance"]
+    outputs:
+      - implementation plan
+      - acceptance criteria
+      - file modifications list
+    outputs-to: ["testwriter", "coder"]
+    
+  testwriter:
+    name: "TestWriter"
+    description: "Test strategy and coverage planning"
+    prompt-file: ".github/chatmodes/TestWriter.chatmode.md"
+    icon: "🧪"
+    triggers:
+      - all features (runs for every issue)
+    inputs-from: ["planner", "security", "performance"]
+    outputs:
+      - test strategy
+      - unit test cases
+      - integration test cases
+      - edge cases
+    outputs-to: ["coder"]
+    
+  coder:
+    name: "Coder"
+    description: "Synthesize agent outputs into implementation-ready issues"
+    prompt-file: ".github/chatmodes/Coder.chatmode.md"
+    icon: "💻"
+    triggers:
+      - final step before implementation
+    inputs-from: ["architect", "security", "performance", "planner", "testwriter"]
+    outputs:
+      - GitHub issue (ready for implementation)
+    outputs-to: ["implementer"]
+    
+  refactor:
+    name: "Refactor"
+    description: "Code quality and refactoring analysis"
+    prompt-file: ".github/chatmodes/Refactor.chatmode.md"
+    icon: "🔄"
+    triggers:
+      keywords: ["refactor", "cleanup", "tech-debt", "improve", "simplify"]
+      labels: ["refactoring", "tech-debt"]
+    outputs:
+      - refactoring proposal
+      - migration path
+      - risk assessment
+
+  workflow-engineer:
+    name: "WorkflowEngineer"
+    description: "Design, create, and review agentic AI workflows"
+    prompt-file: ".github/chatmodes/WorkflowEngineer.chatmode.md"
+    icon: "🔀"
+    triggers:
+      keywords: ["workflow", "agent", "orchestration", "pipeline", "multi-agent", "agentic", "prompt"]
+      labels: ["workflow", "agents", "automation", "orchestration"]
+    outputs:
+      - workflow design document (WDD)
+      - agent prompts
+      - orchestration patterns
+      - workflow test plan
+      - review findings
+    outputs-to: ["planner", "coder", "testwriter"]
+    inputs-from: ["orchestrator", "architect", "security"]
+    expertise:
+      - agentic AI workflow design
+      - multi-agent orchestration
+      - agent prompt engineering
+      - workflow patterns
+      - quality gates and validation
+      - error handling and recovery
+
+# =============================================================================
+# WORKFLOW CONFIGURATIONS
+# How agents are used in different contexts
+# =============================================================================
+
+workflows:
+  # VS Code interactive mode (custom chat modes)
+  vscode:
+    prompt-location: ".github/chatmodes/"
+    mode: "interactive"
+    description: "User switches between chat modes manually in VS Code"
+    file-extension: ".chatmode.md"
+    
+  # GitHub automated workflow  
+  github-automated:
+    mode: "automated"
+    trigger-label: "implement"
+    description: "Agents run automatically in sequence"
+    
+    # Standard feature flow
+    default-flow:
+      - architect
+      - planner
+      - testwriter
+      - coder
+      
+    # Security-sensitive flow
+    security-flow:
+      trigger-keywords: ["auth", "login", "password", "token", "permission"]
+      trigger-labels: ["security", "authentication"]
+      agents:
+        - security
+        - architect
+        - planner
+        - testwriter
+        - coder
+        
+    # Performance-critical flow
+    performance-flow:
+      trigger-keywords: ["optimize", "slow", "cache", "scale"]
+      trigger-labels: ["performance"]
+      agents:
+        - performance
+        - architect
+        - planner
+        - testwriter
+        - coder
+        
+    # Full review flow (complex features)
+    full-flow:
+      trigger-labels: ["complex", "multi-agent"]
+      agents:
+        - orchestrator
+        - security
+        - architect
+        - performance
+        - planner
+        - testwriter
+        - coder
+        
+    # Workflow design flow (for meta-workflow tasks)
+    workflow-flow:
+      trigger-keywords: ["workflow", "agent", "orchestration", "pipeline"]
+      trigger-labels: ["workflow-design", "agents"]
+      agents:
+        - workflow-engineer
+        - planner
+        - testwriter
+        - coder
+
+# =============================================================================
+# PARALLEL EXECUTION
+# Agents that can run simultaneously for efficiency
+# =============================================================================
+
+parallel-execution:
+  enabled: true
+  groups:
+    # Analysis phase - these agents have no dependencies on each other
+    analysis-phase:
+      parallel: true
+      agents: [architect, security, performance]
+      timeout: 300s
+      
+    # Synthesis phase - must run sequentially
+    synthesis-phase:
+      parallel: false
+      agents: [planner, testwriter, coder]
+      
+# =============================================================================
+# ERROR HANDLING & RECOVERY
+# =============================================================================
+
+error-handling:
+  agent-timeout: 300s  # 5 minute max per agent
+  
+  retry-policy:
+    max-attempts: 3
+    backoff: exponential
+    initial-delay: 5s
+    max-delay: 60s
+    
+  fallback:
+    on-agent-failure: "skip-with-warning"  # Continue workflow, mark agent as skipped
+    on-critical-failure: "halt-and-notify"  # Stop workflow, notify maintainers
+    critical-agents: ["security"]  # These agents cannot be skipped
+    
+  recovery:
+    checkpoint: true  # Save state after each agent completes
+    resume-from: "last-successful-agent"  # On retry, start from last checkpoint
+    max-resume-attempts: 2
+    
+# =============================================================================
+# STATE MANAGEMENT
+# Track workflow progress for visibility and recovery
+# =============================================================================
+
+state-management:
+  storage: "issue-comments"  # Store state in issue comments
+  
+  schema:
+    workflow-id: "uuid"
+    current-agent: "string"
+    completed-agents: "array"
+    skipped-agents: "array"
+    agent-outputs: "object"
+    validation-results: "object"
+    started-at: "timestamp"
+    updated-at: "timestamp"
+    
+  visibility:
+    progress-comment: true  # Show progress in issue comments
+    update-frequency: "on-agent-complete"  # Update after each agent
+    format: "checklist"  # Show as checkbox list
+    
+# =============================================================================
+# VALIDATION GATES
+# Inter-agent validation to ensure quality handoffs
+# =============================================================================
+
+validation-gates:
+  # Validate architect output before planner starts
+  architect-to-planner:
+    required-outputs:
+      - "component-design"
+      - "api-contracts"
+      - "file-structure"
+    validator: "schema-check"
+    on-failure: "request-revision"
+    
+  # Validate security output before testwriter
+  security-to-testwriter:
+    required-outputs:
+      - "threat-model"
+      - "security-requirements"
+    validator: "completeness-check"
+    on-failure: "request-revision"
+    
+  # Validate planner output before coder
+  planner-to-coder:
+    required-outputs:
+      - "implementation-plan"
+      - "acceptance-criteria"
+      - "file-modifications"
+    validator: "schema-check"
+    on-failure: "halt"
+    
+  # Final validation before Copilot handoff
+  coder-to-copilot:
+    required-outputs:
+      - "issue-body"
+      - "acceptance-criteria"
+    validator: "issue-format-check"
+    on-failure: "halt"
+
+# =============================================================================
+# SKIP CONDITIONS
+# Early exit conditions to avoid unnecessary agent invocations
+# =============================================================================
+
+skip-conditions:
+  performance:
+    skip-if:
+      - "no-data-operations"  # No database/API calls
+      - "internal-refactor-only"  # Pure code restructuring
+      - "documentation-only"  # Doc changes only
+    skip-keywords: ["docs", "readme", "typo", "comment"]
+    
+  security:
+    skip-if:
+      - "internal-only-change"  # No external exposure
+      - "test-files-only"  # Only test file changes
+    never-skip-for:
+      - "auth"
+      - "api"
+      - "user-data"
+      - "payment"
+      
+  architect:
+    skip-if:
+      - "bug-fix-only"  # Simple bug fixes
+      - "style-change-only"  # CSS/styling only
+    skip-labels: ["bug", "hotfix", "typo"]
+
+# =============================================================================
+# CACHING
+# Cache agent outputs for similar issues
+# =============================================================================
+
+caching:
+  enabled: true
+  
+  strategy:
+    key-components:
+      - "issue-type"  # feature, bug, refactor
+      - "primary-keywords"  # First 3 keywords
+      - "affected-components"  # Detected file paths
+    ttl: 24h  # Cache expires after 24 hours
+    
+  cacheable-agents:
+    - architect  # Architecture patterns are often reusable
+    - security  # Security requirements for similar features
+    - performance  # Performance patterns
+    
+  invalidation:
+    on-file-change: true  # Invalidate if related files change
+    on-config-change: true  # Invalidate if agents.yml changes
+    manual: true  # Allow manual cache clear
+
+# =============================================================================
+# BUDGET & COST TRACKING
+# Limit API calls and track usage
+# =============================================================================
+
+budget:
+  limits:
+    max-agent-calls-per-issue: 10
+    max-retries-per-agent: 3
+    max-total-tokens-per-issue: 100000
+    
+  warnings:
+    warn-at-calls: 8  # Warn when 80% of call budget used
+    warn-at-tokens: 80000  # Warn at 80% token usage
+    
+  tracking:
+    enabled: true
+    metrics:
+      - "agent-calls"
+      - "tokens-used"
+      - "time-elapsed"
+      - "cache-hits"
+    report-to: "issue-comment"  # Add usage summary to issue
+    
+  on-budget-exceeded:
+    action: "halt-with-summary"
+    notify: true
+
+# =============================================================================
+# IMPLEMENTATION PASSES (for custom-coding-agent workflow)
+# =============================================================================
+
+implementation:
+  # After agents create the issue, these passes implement the code
+  passes:
+    architect-review:
+      agent: "architect"
+      action: "Create architecture.md with file structure and interfaces"
+      output: ".github/agent-workspace/architecture.md"
+      
+    implementer:
+      action: "Generate code based on architecture"
+      context:
+        - ".copilot-instructions"
+        - ".github/agent-workspace/architecture.md"
+        - "issue_body"
+      output: "source files"
+      
+    test-generation:
+      agent: "testwriter"
+      action: "Generate tests based on implementation"
+      context:
+        - "implementation_files"
+        - "issue_test_requirements"
+      output: "test files"
+      
+    validation:
+      action: "Run lint, type-check, tests"
+      max-iterations: 3
+      steps:
+        - command: "npm run lint"
+          fix-prompt: "Fix linting errors"
+        - command: "npm run type-check"
+          fix-prompt: "Fix TypeScript errors"
+        - command: "npm run test"
+          fix-prompt: "Fix failing tests"
+          
+    security-review:
+      agent: "security"
+      action: "Review implementation for vulnerabilities"
+      required-for: ["security", "auth", "api"]
+      validation:
+        - "no_critical_issues"
+        - "no_high_issues"
+
+# =============================================================================
+# QUALITY GATES
+# =============================================================================
+
+quality-gates:
+  # Must pass before PR creation
+  required:
+    - lint
+    - type-check
+    - tests
+    
+  coverage:
+    minimum: 80
+    
+  security:
+    max-critical: 0
+    max-high: 0
+    
+# =============================================================================
+# ISSUE FORMAT
+# Standard format that all agents contribute to
+# =============================================================================
+
+issue-format:
+  sections:
+    - name: "Description"
+      source: "user + planner"
+      required: true
+      
+    - name: "Architecture"
+      source: "architect"
+      required-for: ["feature", "api"]
+      marker: "## 🏗️ Architecture"
+      
+    - name: "Security Requirements"
+      source: "security"
+      required-for: ["security", "auth"]
+      marker: "## 🔒 Security Requirements"
+      priority: "critical"
+      
+    - name: "Performance Requirements"
+      source: "performance"
+      required-for: ["performance"]
+      marker: "## ⚡ Performance Requirements"
+      
+    - name: "Implementation Plan"
+      source: "planner"
+      required: true
+      marker: "## 📋 Implementation Plan"
+      
+    - name: "Acceptance Criteria"
+      source: "planner + all agents"
+      required: true
+      marker: "## ✅ Acceptance Criteria"
+      
+    - name: "Test Requirements"
+      source: "testwriter"
+      required: true
+      marker: "## 🧪 Test Requirements"

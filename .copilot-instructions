@@ -1,0 +1,219 @@
+# Copilot Custom Instructions
+
+These instructions guide the Copilot coding agent on code style, quality standards, and development practices for this repository.
+
+## Multi-Agent System
+
+This repository uses a **unified multi-agent system** defined in `.github/agents.yml`.
+
+### Agent Configuration
+- **Agent definitions**: `.github/agents.yml` (single source of truth)
+- **Agent prompts**: `.github/chatmodes/*.chatmode.md`
+- **Used by**: VS Code (custom chat modes) AND GitHub workflows (automated)
+
+### Available Agents
+
+| Agent | Icon | Prompt File | Purpose |
+|-------|------|-------------|---------|
+| Orchestrator | 🎯 | `.github/chatmodes/Orchestrator.chatmode.md` | Coordinates other agents |
+| Architect | 🏗️ | `.github/chatmodes/Architect.chatmode.md` | System design, API contracts |
+| Security | 🔒 | `.github/chatmodes/Security.chatmode.md` | Threat modeling, security reqs |
+| Performance | ⚡ | `.github/chatmodes/Performance.chatmode.md` | Optimization, caching |
+| Planner | 📋 | `.github/chatmodes/Planning.chatmode.md` | Implementation plans |
+| TestWriter | 🧪 | `.github/chatmodes/TestWriter.chatmode.md` | Test strategy, edge cases |
+| Coder | 💻 | `.github/chatmodes/Coder.chatmode.md` | Creates implementation-ready issues |
+| Refactor | 🔄 | `.github/chatmodes/Refactor.chatmode.md` | Code quality improvements |
+| WorkflowEngineer | 🔀 | `.github/chatmodes/WorkflowEngineer.chatmode.md` | Agentic AI workflow design |
+
+### Issue Section Markers
+
+Issues contain sections from agents, marked with icons:
+
+| Marker | Source Agent | Priority |
+|--------|--------------|----------|
+| `## 🏗️ Architecture` | Architect | Follow design decisions |
+| `## 🔒 Security Requirements` | Security | **Critical** - must implement all |
+| `## ⚡ Performance Requirements` | Performance | Optimize as specified |
+| `## 📋 Implementation Plan` | Planner | Follow file paths exactly |
+| `## 🧪 Test Requirements` | TestWriter | Meet coverage targets |
+| `## ✅ Acceptance Criteria` | All agents | All must be completed |
+
+### Reading Multi-Agent Issues
+
+When an issue contains multi-agent sections:
+1. **🔒 Security requirements are non-negotiable** - implement all security controls
+2. **🏗️ Follow architecture decisions** - don't deviate from component design
+3. **⚡ Meet performance criteria** - implement caching/optimization as specified
+4. **🧪 Cover all test cases** - including edge cases listed by TestWriter
+5. **✅ All acceptance criteria must pass** - these are combined from all agents
+
+## Code Style & Formatting
+
+- **Indentation**: 2 spaces, never tabs
+- **Line length**: Soft wrap at 80 characters, hard limit at 120
+- **Naming conventions**:
+  - Functions/methods: camelCase, actions prefixed with verb (e.g., `handleClick`, `validateInput`)
+  - Classes/Components: PascalCase
+  - Constants: UPPER_SNAKE_CASE
+  - Private methods: prefix with `_` (e.g., `_internalHelper`)
+  - Boolean variables: prefix with `is`, `has`, `can`, `should` (e.g., `isLoading`)
+
+- **Quotes**: Use single quotes for strings (unless template literals needed)
+- **Semicolons**: Always use semicolons
+- **Trailing commas**: Use in multi-line objects/arrays
+- **Comments**: Use JSDoc for functions, inline comments for "why" not "what"
+
+## Language & Framework Standards
+
+### JavaScript/TypeScript
+- Use `const` by default, `let` for reassignment, never use `var`
+- Use arrow functions for callbacks
+- Use async/await over promises when possible
+- Import statements at top, grouped by: external, internal, types
+- No default exports; use named exports
+
+### React Specific
+- Functional components only, use hooks
+- Component naming: PascalCase file names matching component name
+- Props destructuring at function signature
+- Custom hooks prefix with `use` (e.g., `useCustomHook`)
+- Avoid prop drilling; use Context API or state management
+
+## Testing Requirements
+
+- **Minimum coverage**: 80% code coverage for all files
+- **Test location**: Test files in `src/__tests__/` or `*.test.ts` alongside source
+- **Framework**: Jest for unit tests, React Testing Library for component tests
+- **Test naming**: Describe what's being tested, not how. Use `it('should...', ...)` format
+- **Requirements**:
+  - Happy path tests required
+  - Error/edge case tests required
+  - All error throws must be tested
+  - Component interactions must be tested
+
+## Code Quality Standards
+
+### Performance
+- Bundle size critical for web: keep total under 50KB gzipped
+- Individual packages: no single package > 20KB gzipped
+- Lazy load code splitting for features > 5KB
+- Optimize all images to WebP format when possible
+- Memoize expensive calculations: use `useMemo` and `useCallback`
+
+### Security
+- Never commit secrets, API keys, or credentials
+- Use environment variables for all configuration
+- Validate all user input server-side AND client-side
+- Escape output to prevent XSS
+- Use parameterized queries to prevent SQL injection
+- CORS configuration must be restrictive
+- Rate limiting on all public endpoints
+
+### Maintainability
+- Keep functions under 30 lines (prefer 10-15)
+- Maximum cyclomatic complexity: 5
+- Avoid nesting deeper than 3 levels
+- DRY principle: don't repeat code across files
+- Single Responsibility Principle: functions do one thing well
+- Error messages must be user-friendly and actionable
+
+## Git & Commits
+
+- **Commit messages**: Use conventional commits format
+  - `feat: add new feature`
+  - `fix: correct bug`
+  - `refactor: restructure code`
+  - `test: add or update tests`
+  - `docs: update documentation`
+
+- **Branch naming**: `feature/description` or `fix/description`
+- **Before committing**: Must pass lint and tests
+- **No force pushes**: Unless explicitly needed for cleanup
+
+## Documentation
+
+- **README**: Keep updated with setup, usage, and architecture
+- **Inline comments**: Explain "why", not "what"
+- **JSDoc**: All exported functions/classes must have JSDoc comments
+- **Types**: Prefer TypeScript types over comments
+- **Complex logic**: Add explanatory comments or refactor to clear variable names
+
+## API & Database
+
+- **REST conventions**: Use HTTP methods correctly (GET, POST, PUT, DELETE)
+- **Status codes**: Return appropriate HTTP status codes
+- **Error responses**: Include error message and code in response
+- **Validation**: Validate input at API boundary
+- **Database**: Use migrations for schema changes, never manual SQL
+
+## Accessibility & UX
+
+- **Web**: WCAG 2.1 AA compliance minimum
+- **Mobile**: Touch targets minimum 44x44 pixels
+- **Forms**: Labels associated with inputs, clear error messages
+- **Loading**: Show loading states for async operations
+- **Responsive**: Mobile-first design approach
+
+## Environment & Build
+
+- **Build checks**: Must have:
+  - `npm run type-check` passing (no TypeScript errors)
+  - `npm run lint` passing (no ESLint errors)
+  - `npm run test` passing (all tests green)
+  - Bundle size within limits
+
+- **Before committing**: Run all checks locally
+- **CI must pass**: No merging with failing CI checks
+
+## Review Checklist
+
+Before creating a PR, the agent should verify:
+
+- ✅ Code follows style guide
+- ✅ Tests written for all changes (80%+ coverage)
+- ✅ No console.log or debug statements
+- ✅ Comments explain "why" not "what"
+- ✅ Performance optimizations applied where needed
+- ✅ Security review: no hardcoded secrets, proper validation
+- ✅ All lint/type/test checks pass
+- ✅ Commit messages follow conventions
+- ✅ PR body explains changes clearly
+- ✅ Related issues/PRs linked
+
+### Multi-Agent Issue Checklist
+
+When issue contains multi-agent sections, also verify:
+
+- ✅ All Security Requirements implemented (no exceptions)
+- ✅ Architecture decisions followed (file paths, patterns)
+- ✅ Performance criteria met (caching, optimization)
+- ✅ All test cases from TestWriter covered
+- ✅ Edge cases explicitly handled
+- ✅ No deviations from specified API contracts
+
+## Special Considerations
+
+### When Refactoring
+- Preserve existing behavior unless explicitly changing it
+- Add deprecation warnings before removing old code
+- Update all tests to verify behavior unchanged
+- Include migration guide in PR
+
+### For Bug Fixes
+- Add regression test that catches the original bug
+- Document root cause in PR or comments
+- Consider if bug exists elsewhere in codebase
+
+### For Performance Work
+- Include before/after metrics in PR
+- Profile to verify improvements
+- Ensure no correctness regressions
+
+### For Security Changes
+- Never ship security fixes to production without review
+- Include security assessment in PR
+- Consider backwards compatibility impact
+
+---
+
+**Last Updated**: January 23, 2026
