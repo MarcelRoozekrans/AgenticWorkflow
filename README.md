@@ -1,5 +1,8 @@
 # AgenticWorkFlow Template
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
+
+
 > 🚀 **Template Repository** - Click "Use this template" to create your own multi-agent AI development pipeline.
 
 [![Use this template](https://img.shields.io/badge/Use%20this-template-2ea44f?style=for-the-badge&logo=github)](../../generate)
